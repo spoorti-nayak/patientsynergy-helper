@@ -1,6 +1,5 @@
 
 project_id = "fsyxlkpudwjqzzxgrxsz"
 
-[functions]
 [functions.doctor-ai]
-path = "supabase/functions/doctor-ai"
+verify_jwt = false

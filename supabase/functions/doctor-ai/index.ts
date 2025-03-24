@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { patients } from "../../src/utils/mockData.ts";
+import { patients } from "../../../src/utils/mockData.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +16,8 @@ serve(async (req) => {
   try {
     const { question, patientId } = await req.json();
     
+    console.log("Request received:", { question, patientId });
+    
     if (!question) {
       return new Response(
         JSON.stringify({ error: "Question is required" }),
@@ -28,11 +30,13 @@ serve(async (req) => {
     if (patientId) {
       relevantPatient = patients.find(patient => patient.id === patientId);
       if (!relevantPatient) {
+        console.log("Patient not found:", patientId);
         return new Response(
           JSON.stringify({ error: "Patient not found" }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      console.log("Found patient:", relevantPatient.firstName, relevantPatient.lastName);
     }
 
     // Process different types of questions
