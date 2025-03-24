@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useSlideIn } from '@/utils/animations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
   Calendar, Phone, Mail, MapPin, Heart, Activity, 
-  Pill, AlertTriangle, Flask, ClipboardList, ArrowLeft,
-  AlertCircle, TestTube
+  Pill, AlertTriangle, TestTube, ClipboardList, ArrowLeft,
+  AlertCircle
 } from 'lucide-react';
 import type { Patient } from '@/utils/mockData';
 
