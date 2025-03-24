@@ -41,6 +41,20 @@ export const DoctorAI: React.FC<DoctorAIProps> = ({ patient }) => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Reset messages when patient changes
+    if (patient) {
+      setMessages([
+        {
+          id: Date.now().toString(),
+          text: `Ask me anything about ${patient.firstName} ${patient.lastName}'s medical information.`,
+          sender: 'ai',
+          timestamp: new Date()
+        }
+      ]);
+    }
+  }, [patient]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -60,6 +74,11 @@ export const DoctorAI: React.FC<DoctorAIProps> = ({ patient }) => {
     setIsLoading(true);
 
     try {
+      console.log("Sending request to edge function with:", { 
+        question, 
+        patientId: patient?.id 
+      });
+      
       const { data, error } = await supabase.functions.invoke('doctor-ai', {
         body: { 
           question: question, 
@@ -67,8 +86,14 @@ export const DoctorAI: React.FC<DoctorAIProps> = ({ patient }) => {
         }
       });
 
+      console.log("Response from edge function:", { data, error });
+
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message || "Error calling AI service");
+      }
+
+      if (!data || !data.answer) {
+        throw new Error("Invalid response from AI service");
       }
 
       const aiMessage: Message = {

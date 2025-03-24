@@ -71,6 +71,8 @@ serve(async (req) => {
       }
     }
 
+    console.log("Sending answer:", answer);
+    
     return new Response(
       JSON.stringify({ answer }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -79,7 +81,7 @@ serve(async (req) => {
     console.error("Error processing question:", error);
     
     return new Response(
-      JSON.stringify({ error: "Failed to process question" }),
+      JSON.stringify({ error: "Failed to process question", details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
