@@ -72,15 +72,10 @@ export const useStaggered = (totalItems: number, baseDelay = 50, duration = 300)
   };
 };
 
-// Component for typing animation dots
-export const TypingAnimation = () => {
-  return (
-    <div className="typing-dot-animation">
-      <span>.</span>
-      <span>.</span>
-      <span>.</span>
-    </div>
-  );
+// Function to generate the typing animation CSS class name
+// Instead of a React component in a .ts file
+export const getTypingAnimationClass = () => {
+  return "typing-dot-animation";
 };
 
 // Hook for detecting when element is in viewport

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { generateAIResponse } from '@/utils/mockData';
 import { useSlideIn } from '@/utils/animations';
+import { TypingAnimation } from '@/components/TypingAnimation';
 
 interface Message {
   id: string;
