@@ -4,6 +4,7 @@ import { Navbar } from '@/components/Navbar';
 import { PatientCard } from '@/components/PatientCard';
 import { PatientProfile } from '@/components/PatientProfile';
 import { ConversationInterface } from '@/components/ConversationInterface';
+import { DoctorAI } from '@/components/DoctorAI';
 import { patients, Patient } from '@/utils/mockData';
 import { useFadeIn } from '@/utils/animations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -95,7 +96,9 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="ai" className="mt-6">
-                <ConversationInterface />
+                <div className="grid grid-cols-1 gap-6">
+                  <DoctorAI />
+                </div>
               </TabsContent>
             </Tabs>
           </div>

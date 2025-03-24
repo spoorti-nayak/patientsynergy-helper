@@ -1,1 +1,5 @@
+
 project_id = "fsyxlkpudwjqzzxgrxsz"
+
+[doctor-ai]
+path = "supabase/functions/doctor-ai"
