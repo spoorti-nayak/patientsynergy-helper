@@ -150,11 +150,12 @@ const getLabResultBadgeClass = (status) => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="summary">
-            <TabsList className="grid grid-cols-4 mb-4">
+            <TabsList className="grid grid-cols-5 mb-4">
               <TabsTrigger value="summary">Summary</TabsTrigger>
               <TabsTrigger value="vitals">Vitals</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
               <TabsTrigger value="ai">AI Assistant</TabsTrigger>
+              <TabsTrigger value="chat">Chat</TabsTrigger>
             </TabsList>
             
             <TabsContent value="summary" className="space-y-6">
@@ -364,6 +365,21 @@ const getLabResultBadgeClass = (status) => {
 
             <TabsContent value="ai" className="space-y-6">
               <DoctorAI patient={patient} />
+            </TabsContent>
+            
+            <TabsContent value="chat" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    Patient Chat Assistant
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <DoctorAI patient={patient} />
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
