@@ -72,8 +72,8 @@ export const useStaggered = (totalItems: number, baseDelay = 50, duration = 300)
   };
 };
 
-// Hook for loading state animation
-export const useTypingAnimation = () => {
+// Component for typing animation dots
+export const TypingAnimation = () => {
   return (
     <div className="typing-dot-animation">
       <span>.</span>
