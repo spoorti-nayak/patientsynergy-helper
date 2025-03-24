@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSlideIn } from '@/utils/animations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Calendar, Phone, Mail, MapPin, Heart, Activity, 
   Pill, AlertTriangle, Flask, ClipboardList, ArrowLeft,
-  AlertCircle
+  AlertCircle, TestTube
 } from 'lucide-react';
 import type { Patient } from '@/utils/mockData';
 
@@ -276,7 +275,7 @@ export const PatientProfile: React.FC<PatientProfileProps> = ({ patient, onBack 
                 <Card>
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Flask className="h-4 w-4 text-medical-blue" />
+                      <TestTube className="h-4 w-4 text-medical-blue" />
                       Recent Lab Results
                     </CardTitle>
                   </CardHeader>
