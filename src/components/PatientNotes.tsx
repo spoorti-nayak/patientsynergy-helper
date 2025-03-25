@@ -18,7 +18,7 @@ interface PatientNotesProps {
   patientId: string;
 }
 
-// This defines what we expect from the database for patient notes
+// Define interfaces for our RPC function responses
 interface PatientNoteRecord {
   id: string;
   patient_id: string;
@@ -54,7 +54,7 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
       }
       
       // Now query the patient_notes table using RPC function
-      const { data, error } = await supabase.rpc('get_patient_notes', { 
+      const { data, error } = await supabase.rpc<PatientNoteRecord[]>('get_patient_notes', { 
         p_patient_id: patientId 
       });
       
@@ -91,7 +91,7 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
       setIsSaving(true);
       
       // Save to Supabase using RPC function
-      const { data, error } = await supabase.rpc('add_patient_note', {
+      const { data, error } = await supabase.rpc<PatientNoteRecord>('add_patient_note', {
         p_patient_id: patientId,
         p_content: newNote
       });
@@ -130,7 +130,7 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
   const handleDeleteNote = async (noteId: string) => {
     try {
       // Delete from Supabase using RPC function
-      const { error } = await supabase.rpc('delete_patient_note', { 
+      const { error } = await supabase.rpc<boolean>('delete_patient_note', { 
         p_note_id: noteId 
       });
       
