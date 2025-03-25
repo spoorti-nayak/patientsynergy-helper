@@ -11,12 +11,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { AddPatientForm } from '@/components/AddPatientForm';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patientsList, setPatientsList] = useState<Patient[]>(patients);
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
   const contentStyle = useFadeIn(200);
+  const { user } = useAuth();
+  
+  // Get the user's name from metadata or use a default value
+  const userName = user?.user_metadata?.name || "Doctor";
 
   const handlePatientClick = (patient: Patient) => {
     setSelectedPatient(patient);
@@ -44,7 +49,7 @@ const Index = () => {
         ) : (
           <div className="space-y-8">
             <div>
-              <h1 className="text-3xl font-bold mb-2">Welcome, Dr. Lee</h1>
+              <h1 className="text-3xl font-bold mb-2">Welcome, {userName}</h1>
               <p className="text-muted-foreground">
                 Tuesday, December 12, 2023 • You have {patientsList.length} patients scheduled today
               </p>

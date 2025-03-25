@@ -6,11 +6,23 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SearchBar } from './SearchBar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Navbar = () => {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  
+  // Get the user's name from metadata or use a default value
+  const userName = user?.user_metadata?.name || "User";
+  // Get initials for avatar
+  const initials = userName
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background backdrop-blur-lg">
@@ -98,7 +110,7 @@ export const Navbar = () => {
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-medical-blue text-white">DR</AvatarFallback>
+                  <AvatarFallback className="bg-medical-blue text-white">{initials}</AvatarFallback>
                 </Avatar>
                 <span className="sr-only">User menu</span>
               </Button>
@@ -107,11 +119,11 @@ export const Navbar = () => {
               <div className="border-b p-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-medical-blue text-white">DR</AvatarFallback>
+                    <AvatarFallback className="bg-medical-blue text-white">{initials}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium">Dr. Rebecca Lee</p>
-                    <p className="text-xs text-muted-foreground">Cardiology</p>
+                    <p className="text-sm font-medium">{userName}</p>
+                    <p className="text-xs text-muted-foreground">Doctor</p>
                   </div>
                 </div>
               </div>
@@ -122,7 +134,7 @@ export const Navbar = () => {
                 <Button variant="ghost" className="w-full justify-start text-sm" size="sm">
                   Settings
                 </Button>
-                <Button variant="ghost" className="w-full justify-start text-sm" size="sm">
+                <Button variant="ghost" className="w-full justify-start text-sm" size="sm" onClick={signOut}>
                   Sign out
                 </Button>
               </div>

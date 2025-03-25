@@ -52,12 +52,13 @@ const Signup = () => {
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
     try {
+      // Make sure we're sending the name correctly to Supabase
       const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
-            name: data.name,
+            name: data.name, // This ensures the name is stored in user_metadata
           },
         },
       });
