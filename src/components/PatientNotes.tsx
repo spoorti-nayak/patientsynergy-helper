@@ -1,16 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Plus, Trash2 } from 'lucide-react';
-import { useSlideIn } from '@/utils/animations';
+import { Plus, Trash2, Save, Clock, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Note {
   id: string;
   content: string;
-  createdAt: Date;
+  timestamp: string;
 }
 
 interface PatientNotesProps {
@@ -20,148 +21,233 @@ interface PatientNotesProps {
 const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [newNote, setNewNote] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const slideInStyle = useSlideIn(100);
+  const { user } = useAuth();
 
-  // Load saved notes for this patient
   useEffect(() => {
-    // In a real app, we'd fetch from an API or database
-    // For now, we'll use localStorage for persistence
-    const savedNotes = localStorage.getItem(`patient-notes-${patientId}`);
-    if (savedNotes) {
-      try {
-        const parsedNotes = JSON.parse(savedNotes);
-        // Convert string dates back to Date objects
-        const notesWithDates = parsedNotes.map(note => ({
-          ...note,
-          createdAt: new Date(note.createdAt)
-        }));
-        setNotes(notesWithDates);
-      } catch (error) {
-        console.error('Failed to parse saved notes:', error);
-      }
+    if (patientId && user) {
+      loadNotes();
     }
-  }, [patientId]);
+  }, [patientId, user]);
 
-  // Save notes to localStorage whenever they change
-  useEffect(() => {
-    if (notes.length > 0) {
-      localStorage.setItem(`patient-notes-${patientId}`, JSON.stringify(notes));
+  const loadNotes = async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('patient_notes')
+        .select('*')
+        .eq('patient_id', patientId)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Convert data to Note format
+      const loadedNotes: Note[] = data.map(note => ({
+        id: note.id,
+        content: note.content,
+        timestamp: new Date(note.created_at).toISOString()
+      }));
+      
+      setNotes(loadedNotes);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+      toast({
+        title: "Failed to load notes",
+        description: "There was an error loading patient notes.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [notes, patientId]);
+  };
 
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!newNote.trim()) return;
-
-    const newNoteObj: Note = {
-      id: Date.now().toString(),
-      content: newNote.trim(),
-      createdAt: new Date()
-    };
-
-    setNotes(prev => [newNoteObj, ...prev]);
-    setNewNote('');
-    setIsAdding(false);
-
-    toast({
-      title: "Note saved",
-      description: "Your note has been saved successfully."
-    });
-  };
-
-  const handleDeleteNote = (noteId: string) => {
-    setNotes(prev => prev.filter(note => note.id !== noteId));
     
-    toast({
-      title: "Note deleted",
-      description: "The note has been removed."
-    });
+    try {
+      setIsSaving(true);
+      const timestamp = new Date().toISOString();
+      const noteId = `note-${Date.now()}`;
+      
+      // Save to Supabase
+      const { data, error } = await supabase
+        .from('patient_notes')
+        .insert({
+          id: noteId,
+          patient_id: patientId,
+          content: newNote,
+          user_id: user?.id
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      // Update local state
+      const savedNote: Note = {
+        id: data.id,
+        content: data.content,
+        timestamp: data.created_at
+      };
+      
+      setNotes([savedNote, ...notes]);
+      setNewNote('');
+      setIsAddingNote(false);
+      
+      toast({
+        title: "Note saved",
+        description: "Your note has been saved successfully."
+      });
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast({
+        title: "Failed to save note",
+        description: "There was an error saving your note.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('patient_notes')
+        .delete()
+        .eq('id', noteId);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setNotes(notes.filter(note => note.id !== noteId));
+      
+      toast({
+        title: "Note deleted",
+        description: "The note has been deleted successfully."
+      });
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast({
+        title: "Failed to delete note",
+        description: "There was an error deleting the note.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatDate = (timestamp: string) => {
+    return new Date(timestamp).toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+      hour: 'numeric',
+      minute: 'numeric'
+    });
   };
 
   return (
-    <div className="space-y-4" style={slideInStyle}>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div>
-            <CardTitle>Patient Notes</CardTitle>
-            <CardDescription>Record and track patient visit notes</CardDescription>
-          </div>
-          {!isAdding && (
-            <Button 
-              size="sm" 
-              onClick={() => setIsAdding(true)}
-              className="mt-0"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Note
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          {isAdding ? (
-            <div className="space-y-4">
-              <Textarea
-                placeholder="Enter your clinical notes here..."
-                value={newNote}
-                onChange={(e) => setNewNote(e.target.value)}
-                className="min-h-[150px] resize-none"
-              />
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => {
-                  setIsAdding(false);
+    <Card className="shadow-card">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-xl">Patient Notes</CardTitle>
+        {!isAddingNote && (
+          <Button onClick={() => setIsAddingNote(true)} size="sm">
+            <Plus className="h-4 w-4 mr-2" /> Add Note
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isAddingNote && (
+          <div className="space-y-2">
+            <Textarea
+              placeholder="Enter your notes about the patient here..."
+              className="min-h-[120px] resize-none"
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+            />
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  setIsAddingNote(false);
                   setNewNote('');
-                }}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAddNote} disabled={!newNote.trim()}>
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Note
-                </Button>
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={handleAddNote}
+                disabled={!newNote.trim() || isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Note
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-medical-blue" />
+            <span className="ml-2">Loading notes...</span>
+          </div>
+        ) : notes.length > 0 ? (
+          <div className="space-y-4">
+            {notes.map((note) => (
+              <div key={note.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {formatDate(note.timestamp)}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                    onClick={() => handleDeleteNote(note.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete note</span>
+                  </Button>
+                </div>
+                <div className="text-sm whitespace-pre-wrap">{note.content}</div>
               </div>
-            </div>
-          ) : notes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No notes have been added yet.</p>
-              <p>Click "Add Note" to create your first note for this patient.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {notes.map((note) => (
-                <Card key={note.id} className="bg-accent/50">
-                  <CardContent className="pt-6">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-sm text-muted-foreground">
-                        {formatDate(note.createdAt)}
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteNote(note.id)}
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="whitespace-pre-wrap">{note.content}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No notes have been added for this patient yet.</p>
+            {!isAddingNote && (
+              <Button 
+                variant="outline" 
+                className="mt-2" 
+                size="sm" 
+                onClick={() => setIsAddingNote(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add the first note
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
