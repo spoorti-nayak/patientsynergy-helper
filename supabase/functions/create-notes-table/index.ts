@@ -8,12 +8,16 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('Create notes table function called');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request')
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
+    console.log('Creating Supabase admin client');
     // Get the Supabase client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -21,13 +25,16 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     )
 
+    console.log('Calling create_patient_notes_table function');
     // Create patient_notes table directly with SQL
-    const { error: createTableError } = await supabaseAdmin.rpc('create_patient_notes_table')
+    const { data, error: createTableError } = await supabaseAdmin.rpc('create_patient_notes_table')
 
     if (createTableError) {
+      console.error('Error creating table:', createTableError);
       throw createTableError
     }
 
+    console.log('Table created successfully', data);
     return new Response(
       JSON.stringify({ success: true, message: 'Patient notes table created successfully' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
