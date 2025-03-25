@@ -13,6 +13,7 @@ import { AddPatientForm } from '@/components/AddPatientForm';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 const Index = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -23,10 +24,8 @@ const Index = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Get the user's name from metadata or use a default value
   const userName = user?.user_metadata?.name || "Doctor";
 
-  // Load patients from Supabase when user logs in
   useEffect(() => {
     if (user) {
       fetchPatients();
@@ -49,9 +48,7 @@ const Index = () => {
       }
 
       if (data) {
-        // Extract the patient data from the JSONB column
         const loadedPatients = data.map(item => {
-          // Safely parse patient_data which could be an object or a string
           let patientData;
           if (typeof item.patient_data === 'string') {
             try {
@@ -91,15 +88,13 @@ const Index = () => {
 
   const handleAddPatient = async (newPatient: Patient) => {
     try {
-      // Insert the new patient into Supabase
       const { error } = await supabase.from('patients').insert({
         user_id: user?.id,
-        patient_data: newPatient
+        patient_data: newPatient as unknown as Json
       });
 
       if (error) throw error;
 
-      // Update local state
       setPatientsList(prev => [newPatient, ...prev]);
       
       toast({
@@ -245,7 +240,6 @@ const Index = () => {
   );
 };
 
-// Status card component
 const StatusCard = ({ title, count, color }: { 
   title: string; 
   count: number; 
