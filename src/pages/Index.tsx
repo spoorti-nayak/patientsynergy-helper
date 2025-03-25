@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { PatientCard } from '@/components/PatientCard';
@@ -51,7 +50,22 @@ const Index = () => {
 
       if (data) {
         // Extract the patient data from the JSONB column
-        const loadedPatients = data.map(item => JSON.parse(item.patient_data));
+        const loadedPatients = data.map(item => {
+          // Safely parse patient_data which could be an object or a string
+          let patientData;
+          if (typeof item.patient_data === 'string') {
+            try {
+              patientData = JSON.parse(item.patient_data);
+            } catch (e) {
+              console.error('Error parsing patient data:', e);
+              return null;
+            }
+          } else {
+            patientData = item.patient_data;
+          }
+          return patientData;
+        }).filter(Boolean) as Patient[];
+        
         setPatientsList(loadedPatients);
       }
     } catch (error) {
@@ -80,7 +94,7 @@ const Index = () => {
       // Insert the new patient into Supabase
       const { error } = await supabase.from('patients').insert({
         user_id: user?.id,
-        patient_data: JSON.stringify(newPatient)
+        patient_data: newPatient
       });
 
       if (error) throw error;

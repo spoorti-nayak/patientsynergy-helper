@@ -18,6 +18,15 @@ interface PatientNotesProps {
   patientId: string;
 }
 
+// This defines what we expect from the database for patient notes
+interface PatientNoteRecord {
+  id: string;
+  patient_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+}
+
 const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [newNote, setNewNote] = useState('');
@@ -37,22 +46,32 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
-        .from('patient_notes')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('created_at', { ascending: false });
-        
+      // Try to create the notes table if it doesn't exist
+      try {
+        await supabase.functions.invoke('create-notes-table');
+      } catch (error) {
+        console.log('Note: Table may already exist or function failed:', error);
+      }
+      
+      // Now query the patient_notes table using RPC function
+      const { data, error } = await supabase.rpc('get_patient_notes', { 
+        p_patient_id: patientId 
+      });
+      
       if (error) throw error;
       
-      // Convert data to Note format
-      const loadedNotes: Note[] = data.map(note => ({
-        id: note.id,
-        content: note.content,
-        timestamp: new Date(note.created_at).toISOString()
-      }));
-      
-      setNotes(loadedNotes);
+      if (data && Array.isArray(data)) {
+        // Convert data to Note format
+        const loadedNotes: Note[] = data.map((note: PatientNoteRecord) => ({
+          id: note.id,
+          content: note.content,
+          timestamp: note.created_at
+        }));
+        
+        setNotes(loadedNotes);
+      } else {
+        setNotes([]);
+      }
     } catch (error) {
       console.error('Error loading notes:', error);
       toast({
@@ -70,38 +89,32 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
     
     try {
       setIsSaving(true);
-      const timestamp = new Date().toISOString();
-      const noteId = `note-${Date.now()}`;
       
-      // Save to Supabase
-      const { data, error } = await supabase
-        .from('patient_notes')
-        .insert({
-          id: noteId,
-          patient_id: patientId,
-          content: newNote,
-          user_id: user?.id
-        })
-        .select()
-        .single();
-        
+      // Save to Supabase using RPC function
+      const { data, error } = await supabase.rpc('add_patient_note', {
+        p_patient_id: patientId,
+        p_content: newNote
+      });
+      
       if (error) throw error;
       
-      // Update local state
-      const savedNote: Note = {
-        id: data.id,
-        content: data.content,
-        timestamp: data.created_at
-      };
-      
-      setNotes([savedNote, ...notes]);
-      setNewNote('');
-      setIsAddingNote(false);
-      
-      toast({
-        title: "Note saved",
-        description: "Your note has been saved successfully."
-      });
+      if (data) {
+        // Update local state with the returned note
+        const savedNote: Note = {
+          id: data.id,
+          content: data.content,
+          timestamp: data.created_at
+        };
+        
+        setNotes([savedNote, ...notes]);
+        setNewNote('');
+        setIsAddingNote(false);
+        
+        toast({
+          title: "Note saved",
+          description: "Your note has been saved successfully."
+        });
+      }
     } catch (error) {
       console.error('Error saving note:', error);
       toast({
@@ -116,12 +129,11 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
 
   const handleDeleteNote = async (noteId: string) => {
     try {
-      // Delete from Supabase
-      const { error } = await supabase
-        .from('patient_notes')
-        .delete()
-        .eq('id', noteId);
-        
+      // Delete from Supabase using RPC function
+      const { error } = await supabase.rpc('delete_patient_note', { 
+        p_note_id: noteId 
+      });
+      
       if (error) throw error;
       
       // Update local state

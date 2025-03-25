@@ -21,7 +21,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     )
 
-    // Create patient_notes table
+    // Create patient_notes table directly with SQL
     const { error: createTableError } = await supabaseAdmin.rpc('create_patient_notes_table')
 
     if (createTableError) {

@@ -20,6 +20,7 @@ const initializeDatabase = async () => {
   try {
     // Create patient_notes table if it doesn't exist
     await supabase.functions.invoke('create-notes-table');
+    console.log("Database initialization completed");
   } catch (error) {
     console.error('Error initializing database:', error);
   }
