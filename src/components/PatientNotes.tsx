@@ -53,16 +53,17 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
         console.log('Note: Table may already exist or function failed:', error);
       }
       
-      // Query the patient_notes table using RPC function with any type
-      const { data, error } = await supabase.rpc('get_patient_notes', { 
-        p_patient_id: patientId 
-      });
+      // Query the patient_notes table using RPC function without type parameters
+      const { data, error } = await supabase.rpc(
+        'get_patient_notes',
+        { p_patient_id: patientId }
+      );
       
       if (error) throw error;
       
       if (data && Array.isArray(data)) {
-        // Convert data to Note format
-        const loadedNotes: Note[] = data.map((note: any) => ({
+        // Convert data to Note format with explicit type casting
+        const loadedNotes = data.map((note: any) => ({
           id: note.id,
           content: note.content,
           timestamp: note.created_at
@@ -90,11 +91,14 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
     try {
       setIsSaving(true);
       
-      // Save to Supabase using RPC function
-      const { data, error } = await supabase.rpc('add_patient_note', {
-        p_patient_id: patientId,
-        p_content: newNote
-      });
+      // Save to Supabase using RPC function without type parameters
+      const { data, error } = await supabase.rpc(
+        'add_patient_note',
+        {
+          p_patient_id: patientId,
+          p_content: newNote
+        }
+      );
       
       if (error) throw error;
       
@@ -132,10 +136,11 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
 
   const handleDeleteNote = async (noteId: string) => {
     try {
-      // Delete from Supabase using RPC function
-      const { error } = await supabase.rpc('delete_patient_note', { 
-        p_note_id: noteId 
-      });
+      // Delete from Supabase using RPC function without type parameters
+      const { error } = await supabase.rpc(
+        'delete_patient_note',
+        { p_note_id: noteId }
+      );
       
       if (error) throw error;
       

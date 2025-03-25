@@ -27,7 +27,9 @@ serve(async (req) => {
 
     console.log('Calling create_patient_notes_table function');
     // Create patient_notes table directly with SQL
-    const { data, error: createTableError } = await supabaseAdmin.rpc('create_patient_notes_table')
+    const { data, error: createTableError } = await supabaseAdmin.rpc(
+      'create_patient_notes_table'
+    )
 
     if (createTableError) {
       console.error('Error creating table:', createTableError);
