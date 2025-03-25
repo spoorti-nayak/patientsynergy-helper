@@ -8,9 +8,14 @@ import { DoctorAI } from '@/components/DoctorAI';
 import { patients, Patient } from '@/utils/mockData';
 import { useFadeIn } from '@/utils/animations';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { AddPatientForm } from '@/components/AddPatientForm';
 
 const Index = () => {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [patientsList, setPatientsList] = useState<Patient[]>(patients);
+  const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
   const contentStyle = useFadeIn(200);
 
   const handlePatientClick = (patient: Patient) => {
@@ -20,6 +25,10 @@ const Index = () => {
 
   const handleBackClick = () => {
     setSelectedPatient(null);
+  };
+
+  const handleAddPatient = (newPatient: Patient) => {
+    setPatientsList(prev => [newPatient, ...prev]);
   };
 
   return (
@@ -37,7 +46,7 @@ const Index = () => {
             <div>
               <h1 className="text-3xl font-bold mb-2">Welcome, Dr. Lee</h1>
               <p className="text-muted-foreground">
-                Tuesday, December 12, 2023 • You have 3 patients scheduled today
+                Tuesday, December 12, 2023 • You have {patientsList.length} patients scheduled today
               </p>
             </div>
             
@@ -52,17 +61,17 @@ const Index = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <StatusCard 
                     title="Critical Patients" 
-                    count={patients.filter(p => p.status === 'critical').length} 
+                    count={patientsList.filter(p => p.status === 'critical').length} 
                     color="medical-critical"
                   />
                   <StatusCard 
                     title="Requires Attention" 
-                    count={patients.filter(p => p.status === 'warning').length} 
+                    count={patientsList.filter(p => p.status === 'warning').length} 
                     color="medical-warning"
                   />
                   <StatusCard 
                     title="Stable Patients" 
-                    count={patients.filter(p => p.status === 'stable').length} 
+                    count={patientsList.filter(p => p.status === 'stable').length} 
                     color="medical-success"
                   />
                 </div>
@@ -70,7 +79,7 @@ const Index = () => {
                 <div className="mt-8">
                   <h2 className="text-xl font-semibold mb-4">Recent Patients</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {patients.map((patient, index) => (
+                    {patientsList.map((patient, index) => (
                       <PatientCard 
                         key={patient.id} 
                         patient={patient} 
@@ -83,8 +92,15 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="patients" className="mt-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">All Patients</h2>
+                  <Button onClick={() => setIsAddPatientOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Patient
+                  </Button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {patients.map((patient, index) => (
+                  {patientsList.map((patient, index) => (
                     <PatientCard 
                       key={patient.id} 
                       patient={patient} 
@@ -104,6 +120,12 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      <AddPatientForm 
+        isOpen={isAddPatientOpen}
+        onClose={() => setIsAddPatientOpen(false)}
+        onAddPatient={handleAddPatient}
+      />
     </div>
   );
 };
