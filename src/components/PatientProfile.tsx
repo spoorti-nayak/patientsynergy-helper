@@ -1,17 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSlideIn } from '@/utils/animations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Calendar, Phone, Mail, MapPin, Heart, Activity, 
   Pill, AlertTriangle, TestTube, ClipboardList, ArrowLeft,
-  AlertCircle
+  AlertCircle, Save, Plus
 } from 'lucide-react';
 import type { Patient } from '@/utils/mockData';
 import DoctorAI from './DoctorAI';
+import PatientNotes from './PatientNotes';
 
 interface PatientProfileProps {
   patient: Patient;
@@ -107,6 +110,7 @@ const getLabResultBadgeClass = (status) => {
             <CardTitle>Patient Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            
             <div className="flex flex-col items-center mb-6">
               <div className="w-24 h-24 bg-medical-lightBlue text-medical-blue rounded-full flex items-center justify-center text-3xl font-bold mb-3">
                 {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
@@ -155,8 +159,9 @@ const getLabResultBadgeClass = (status) => {
               <TabsTrigger value="vitals">Vitals</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
               <TabsTrigger value="ai">AI Assistant</TabsTrigger>
-              <TabsTrigger value="chat">Chat</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
             </TabsList>
+            
             
             <TabsContent value="summary" className="space-y-6">
               {/* Conditions & Allergies */}
@@ -367,19 +372,9 @@ const getLabResultBadgeClass = (status) => {
               <DoctorAI patient={patient} />
             </TabsContent>
             
-            <TabsContent value="chat" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    Patient Chat Assistant
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[400px]">
-                    <DoctorAI patient={patient} />
-                  </div>
-                </CardContent>
-              </Card>
+            {/* New Notes tab replacing Chat tab */}
+            <TabsContent value="notes" className="space-y-6">
+              <PatientNotes patientId={patient.id} />
             </TabsContent>
           </Tabs>
         </div>
