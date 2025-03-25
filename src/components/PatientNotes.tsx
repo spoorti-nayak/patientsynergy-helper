@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -52,7 +53,7 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
         console.log('Note: Table may already exist or function failed:', error);
       }
       
-      // Now query the patient_notes table using RPC function with proper typing
+      // Query the patient_notes table using RPC function with any type
       const { data, error } = await supabase.rpc('get_patient_notes', { 
         p_patient_id: patientId 
       });
@@ -61,7 +62,7 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
       
       if (data && Array.isArray(data)) {
         // Convert data to Note format
-        const loadedNotes: Note[] = data.map((note: PatientNoteRecord) => ({
+        const loadedNotes: Note[] = data.map((note: any) => ({
           id: note.id,
           content: note.content,
           timestamp: note.created_at
@@ -89,7 +90,7 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
     try {
       setIsSaving(true);
       
-      // Save to Supabase using RPC function with proper typing
+      // Save to Supabase using RPC function
       const { data, error } = await supabase.rpc('add_patient_note', {
         p_patient_id: patientId,
         p_content: newNote
@@ -98,14 +99,14 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
       if (error) throw error;
       
       if (data) {
-        // Type assertion to ensure TypeScript knows the shape of the data
-        const noteRecord = data as PatientNoteRecord;
+        // Type assertion to handle the unknown response type
+        const noteData = data as any;
         
         // Update local state with the returned note
         const savedNote: Note = {
-          id: noteRecord.id,
-          content: noteRecord.content,
-          timestamp: noteRecord.created_at
+          id: noteData.id,
+          content: noteData.content,
+          timestamp: noteData.created_at
         };
         
         setNotes([savedNote, ...notes]);
@@ -131,7 +132,7 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
 
   const handleDeleteNote = async (noteId: string) => {
     try {
-      // Delete from Supabase using RPC function with proper typing
+      // Delete from Supabase using RPC function
       const { error } = await supabase.rpc('delete_patient_note', { 
         p_note_id: noteId 
       });
