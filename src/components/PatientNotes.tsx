@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,9 +68,9 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
       }
       
       // Query the patient_notes table using RPC function
-      const { data, error } = await supabase.rpc<PatientNoteRecord[]>(
+      const { data, error } = await supabase.rpc<PatientNoteRecord[], GetPatientNotesParams>(
         'get_patient_notes', 
-        { p_patient_id: patientId } as GetPatientNotesParams
+        { p_patient_id: patientId }
       );
       
       if (error) throw error;
@@ -105,12 +106,12 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
       setIsSaving(true);
       
       // Save to Supabase using RPC function
-      const { data, error } = await supabase.rpc<PatientNoteRecord>(
+      const { data, error } = await supabase.rpc<PatientNoteRecord, AddPatientNoteParams>(
         'add_patient_note',
         {
           p_patient_id: patientId,
           p_content: newNote
-        } as AddPatientNoteParams
+        }
       );
       
       if (error) throw error;
@@ -147,9 +148,9 @@ const PatientNotes: React.FC<PatientNotesProps> = ({ patientId }) => {
   const handleDeleteNote = async (noteId: string) => {
     try {
       // Delete from Supabase using RPC function
-      const { error } = await supabase.rpc(
+      const { error } = await supabase.rpc<boolean, DeletePatientNoteParams>(
         'delete_patient_note',
-        { p_note_id: noteId } as DeletePatientNoteParams
+        { p_note_id: noteId }
       );
       
       if (error) throw error;
